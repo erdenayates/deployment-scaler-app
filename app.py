@@ -37,6 +37,12 @@ def logs():
     logs = get_pod_logs(namespace, pod_name, container_name)
     return render_template("logs.html", logs=logs)
 
+@app.route("/delete-error-completed-pods", methods=["POST"])
+def delete_error_completed_pods():
+    delete_error_and_completed_pods()
+    return redirect("/")
+
+
 def get_deployments():
     api_instance = client.AppsV1Api()
     deployments = api_instance.list_deployment_for_all_namespaces()
@@ -52,6 +58,14 @@ def get_pod_logs(namespace, pod_name, container_name=None):
     api_instance = client.CoreV1Api()
     logs = api_instance.read_namespaced_pod_log(pod_name, namespace, container=container_name)
     return logs
+
+def delete_error_and_completed_pods():
+    api_instance = client.CoreV1Api()
+    pods = api_instance.list_pod_for_all_namespaces()
+
+    for pod in pods.items:
+        if pod.status.phase in ['Error', 'Succeeded', 'Failed']:
+            api_instance.delete_namespaced_pod(pod.metadata.name, pod.metadata.namespace)
 
 def get_pods_by_deployment(namespace, deployment_name):
     api_instance = client.CoreV1Api()
