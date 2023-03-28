@@ -32,10 +32,17 @@ def scale():
 def logs():
     namespace = request.form["namespace"]
     pod_name = request.form["pod_name"]
-    container_name = request.form.get("container_name", None)
 
-    logs = get_pod_logs(namespace, pod_name, container_name)
+    logs = get_pod_logs(namespace, pod_name)
     return render_template("logs.html", logs=logs)
+
+@app.route("/fetch_logs", methods=["POST"])
+def fetch_logs():
+    namespace = request.form["namespace"]
+    pod_name = request.form["pod_name"]
+
+    logs = get_pod_logs(namespace, pod_name)
+    return logs
 
 @app.route("/delete-error-completed-pods", methods=["POST"])
 def delete_error_completed_pods():
@@ -54,9 +61,9 @@ def scale_deployment(namespace, deployment_name, replicas):
     body = {"spec": {"replicas": replicas}}
     api_instance.patch_namespaced_deployment_scale(deployment_name, namespace, body)
 
-def get_pod_logs(namespace, pod_name, container_name=None):
+def get_pod_logs(namespace, pod_name):
     api_instance = client.CoreV1Api()
-    logs = api_instance.read_namespaced_pod_log(pod_name, namespace, container=container_name)
+    logs = api_instance.read_namespaced_pod_log(pod_name, namespace)
     return logs
 
 def delete_error_and_completed_pods():
