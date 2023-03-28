@@ -6,57 +6,55 @@
     <title>kubebolt</title>
     <link rel="icon" href="https://s3.amazonaws.com/erdenayat.es/kubebolt.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        h1 {
-            text-align: center;
-        }
-    </style>
+    <link href="/static/style.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <img src="https://s3.amazonaws.com/erdenayat.es/kubebolt-logo.png" alt="logo" width="151" height="60">
-        <div class="form-check form-switch mb-3">
-            <input class="form-check-input" type="checkbox" id="showAllNamespaces" onchange="showHideNamespaces()">
-            <label class="form-check-label" for="showAllNamespaces">Show all namespaces</label>
+    <div class="container-fluid">
+        <div class="header d-flex justify-content-between align-items-center">
+            <img src="https://s3.amazonaws.com/erdenayat.es/kubebolt-logo.png" alt="logo" width="151" height="60">
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="showAllNamespaces" onchange="showHideNamespaces()">
+                <label class="form-check-label" for="showAllNamespaces">Show all namespaces</label>
+            </div>
         </div>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Namespace
-                    </th>
-                    <th>Current Replicas</th>
-                    <th>Scale</th>
-                    <th>Logs</th>
-                    <th>Restart</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for deployment in deployments.items %}
-                <tr{% if deployment.metadata.namespace in ['default','kube-system'] %} style="display:none;"{% endif %}>
-                    <td>{{ deployment.metadata.name }}</td>
-                    <td>{{ deployment.metadata.namespace }}</td>
-                    <td>{{ deployment.spec.replicas }}</td>
-                    <td>
-                        <form action="/scale" method="post" class="d-flex">
-                            <input type="hidden" name="namespace" value="{{ deployment.metadata.namespace }}">
-                            <input type="hidden" name="deployment_name" value="{{ deployment.metadata.name }}">
-                            <input type="number" name="replicas" value="{{ deployment.spec.replicas }}" min="0" class="form-control me-2">
-                            <button type="submit" class="btn btn-primary">Scale</button>
-                        </form>
-                    </td>
-                    <td>
-                        <form action="/logs" method="post">
-                            <input type="hidden" name="namespace" value="{{ deployment.metadata.namespace }}">
-                            <select name="pod_name" class="form-select me-2">
-                                {% for pod in deployment_pods[deployment.metadata.name].items %}
-                                    <option value="{{ pod.metadata.name }}">{{ pod.metadata.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <button type="submit" class="btn btn-secondary">View Logs</button>
-                        </form>
-                    </td>
-                    <td>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Namespace</th>                        
+                        <th>Current Replicas</th>
+                        <th>Scale</th>
+                        <th>Logs</th>
+                        <th>Restart</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for deployment in deployments.items %}
+                    <tr{% if deployment.metadata.namespace in ['default','kube-system'] %} style="display:none;"{% endif %}>
+                        <td>{{ deployment.metadata.name }}</td>
+                        <td>{{ deployment.metadata.namespace }}</td>
+                        <td>{{ deployment.spec.replicas }}</td>
+                        <td>
+                            <form action="/scale" method="post" class="d-flex">
+                                <input type="hidden" name="namespace" value="{{ deployment.metadata.namespace }}">
+                                <input type="hidden" name="deployment_name" value="{{ deployment.metadata.name }}">
+                                <input type="number" name="replicas" value="{{ deployment.spec.replicas }}" min="0" class="form-control me-2">
+                                <button type="submit" class="btn btn-primary">Scale</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form action="/logs" method="post">
+                                <input type="hidden" name="namespace" value="{{ deployment.metadata.namespace }}">
+                                <select name="pod_name" class="form-select me-2">
+                                    {% for pod in deployment_pods[deployment.metadata.name].items %}
+                                        <option value="{{ pod.metadata.name }}">{{ pod.metadata.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-secondary">View Logs</button>
+                            </form>
+                        </td>
+                        <td>
                         <form action="/restart" method="post">
                             <input type="hidden" name="namespace" value="{{ deployment.metadata.namespace }}">
                             <input type="hidden" name="deployment_name" value="{{ deployment.metadata.name }}">
@@ -76,16 +74,23 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
     <script>
-        function showHideNamespaces() {
-            let showAll = document.getElementById('showAllNamespaces').checked;
-            let rows = document.querySelectorAll('table tbody tr');
-            rows.forEach(row => {
-                let namespace = row.cells[1].innerText;
-                if (namespace === 'default' || namespace === 'kube-system') {
-                    row.style.display = showAll ? '' : 'none';
-                }
-            });
+function showHideNamespaces() {
+    let showAll = document.getElementById('showAllNamespaces').checked;
+    let rows = document.querySelectorAll('table tbody tr');
+    let visibleRowIndex = 0;
+    rows.forEach(row => {
+        let namespace = row.cells[1].innerText;
+        let shouldHide = !showAll && (namespace === 'default' || namespace === 'kube-system');
+        row.style.display = shouldHide ? 'none' : '';
+
+        // Apply alternating background colors to visible rows
+        if (!shouldHide) {
+            row.style.backgroundColor = visibleRowIndex % 2 === 0 ? '#e9ecef' : '#f8f9fa'; // Swap the colors here
+            visibleRowIndex += 1;
         }
+    });
+}
+showHideNamespaces();
     </script>
 </body>
 </html>
