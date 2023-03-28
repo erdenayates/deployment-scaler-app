@@ -28,11 +28,12 @@
                     <th>Current Replicas</th>
                     <th>Scale</th>
                     <th>Logs</th>
+                    <th>Restart</th>
                 </tr>
             </thead>
             <tbody>
                 {% for deployment in deployments.items %}
-                <tr{% if deployment.metadata.namespace in ['default', 'kube-system'] %} style="display:none;"{% endif %}>
+                <tr{% if deployment.metadata.namespace in ['default','kube-system'] %} style="display:none;"{% endif %}>
                     <td>{{ deployment.metadata.name }}</td>
                     <td>{{ deployment.metadata.namespace }}</td>
                     <td>{{ deployment.spec.replicas }}</td>
@@ -55,29 +56,36 @@
                             <button type="submit" class="btn btn-secondary">View Logs</button>
                         </form>
                     </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <div class="text-center mb-3">
-        <form action="/delete-error-completed-pods" method="post">
-            <button type="submit" class="btn btn-danger">Delete Error and Completed Pods</button>
-        </form>
-    </div>        
-</div>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
-<script>
-    function showHideNamespaces() {
-        let showAll = document.getElementById('showAllNamespaces').checked;
-        let rows = document.querySelectorAll('table tbody tr');
-        rows.forEach(row => {
-            let namespace = row.cells[1].innerText;
-            if (namespace === 'default' || namespace === 'kube-system') {
-                row.style.display = showAll ? '' : 'none';
-            }
-        });
-    }
-</script>
+                    <td>
+                        <form action="/restart" method="post">
+                            <input type="hidden" name="namespace" value="{{ deployment.metadata.namespace }}">
+                            <input type="hidden" name="deployment_name" value="{{ deployment.metadata.name }}">
+                            <button type="submit" class="btn btn-warning">Restart</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="text-center mb-3">
+            <form action="/delete-error-completed-pods" method="post">
+                <button type="submit" class="btn btn-danger">Delete Error and Completed Pods</button>
+            </form>
+        </div>        
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+    <script>
+        function showHideNamespaces() {
+            let showAll = document.getElementById('showAllNamespaces').checked;
+            let rows = document.querySelectorAll('table tbody tr');
+            rows.forEach(row => {
+                let namespace = row.cells[1].innerText;
+                if (namespace === 'default' || namespace === 'kube-system') {
+                    row.style.display = showAll ? '' : 'none';
+                }
+            });
+        }
+    </script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect
 from kubernetes import client, config
+from datetime import datetime
 
 # Configure Kubernetes API client
 config.load_incluster_config()
@@ -49,6 +50,29 @@ def delete_error_completed_pods():
     delete_error_and_completed_pods()
     return redirect("/")
 
+@app.route("/restart", methods=["POST"])
+def rollout_restart_deployment():
+    namespace = request.form["namespace"]
+    deployment_name = request.form["deployment_name"]
+    
+    rollout_restart(namespace, deployment_name)
+    
+    return redirect("/")
+
+def rollout_restart(namespace, deployment_name):
+    api_instance = client.AppsV1Api()
+    body = {
+        "spec": {
+            "template": {
+                "metadata": {
+                    "annotations": {
+                        "kubectl.kubernetes.io/restartedAt": datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+                    }
+                }
+            }
+        }
+    }
+    api_instance.patch_namespaced_deployment(deployment_name, namespace, body)
 
 def get_deployments():
     api_instance = client.AppsV1Api()
