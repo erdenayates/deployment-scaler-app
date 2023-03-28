@@ -5,19 +5,16 @@ body {
     font-family: Arial, sans-serif;
 }
 
-.container-fluid {
+.container-lg {
     padding-left: 15px;
     padding-right: 15px;
-  }
-  
-  @media (min-width: 768px) {
-    .container-fluid {
-      padding-left: 2rem;
-      padding-right: 2rem;
+}
+
+@media (min-width: 992px) {
+    .container-lg {
+        padding-left: 2rem;
+        padding-right: 2rem;
     }
-  }
-.header {
-    margin-bottom: 2rem;
 }
 
 h1 {
@@ -64,6 +61,21 @@ button:hover {
 
 .form-select {
     width: auto;
+}
+
+@media (max-width: 767.98px) {
+    .form-inline {
+        flex-direction: column;
+    }
+
+    .form-inline input,
+    .form-inline select {
+        margin-bottom: 0.5rem;
+    }
+
+    .form-inline button {
+        margin-top: 0.5rem;
+    }
 }
 
 .btn-primary {
