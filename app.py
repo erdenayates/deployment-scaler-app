@@ -80,10 +80,21 @@ def get_deployments():
     return deployments
 
 def scale_deployment(namespace, deployment_name, replicas):
-    api_instance = client.App
-    AppsV1Api()
-    body = {"spec": {"replicas": replicas}}
-    api_instance.patch_namespaced_deployment_scale(deployment_name, namespace, body)
+    api_instance = client.AppsV1Api()
+
+    # Update the deployment with the new replica count
+    update_deployment = {
+        'spec': {
+            'replicas': replicas
+        }
+    }
+
+    try:
+        api_response = api_instance.patch_namespaced_deployment(deployment_name, namespace, update_deployment)
+        print(f"Deployment {deployment_name} in namespace {namespace} has been scaled to {replicas} replicas.")
+    except client.ApiException as e:
+        print(f"Exception when calling AppsV1Api->patch_namespaced_deployment: {e}")
+
 
 def get_pod_logs(namespace, pod_name):
     api_instance = client.CoreV1Api()
