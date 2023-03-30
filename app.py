@@ -20,6 +20,7 @@ def index():
     node_metrics = get_node_metrics()
     node_metrics_human_readable = []
 
+
     if node_metrics:
         for node_metric in node_metrics['items']:
             node_name = node_metric['metadata']['name']

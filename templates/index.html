@@ -100,8 +100,8 @@
                         <tr>
                             <td>{{ node_metric.name }}</td>
                             <td>{{ node_metric.cpu_usage }}</td>
-                            <td>{{ node_metric.cpu_usage | float / 10 | round(2) }}</td>
-                            <td>{{ node_metric.memory_usage | float / (1024 * 1024) | round(2) }} Mi</td>
+                            <td>{{ node_metric.cpu_usage | int / 10 }}%</td>
+                            <td>{{ "{:.0f}".format(node_metric.memory_usage | int / (1024 * 1024) | round(2)) }} Mi</td>
                             <td>{{ node_metric.memory_usage_percentage }}%</td>
                         </tr>
                         {% endfor %}
