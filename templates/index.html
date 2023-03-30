@@ -1,5 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+<style>
+    /* ... */
+    .action-button {
+        width: 100px;
+        text-align: center;
+    }
+</style>
 
 <head>
     <meta charset="UTF-8">
@@ -19,55 +26,55 @@
             </div>
         </div>
         <main>
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Namespace</th>
-                        <th>Current&nbsp;Replicas</th>
-                        <th>Scale</th>
-                        <th>Logs</th>
-                        <th>Restart</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for deployment in deployments.items %}
-                    <tr{% if deployment.metadata.namespace in ['default','kube-system'] %} style="display:none;" {%
-                        endif %}>
-                        <td>{{ deployment.metadata.name }}</td>
-                        <td>{{ deployment.metadata.namespace }}</td>
-                        <td>{{ deployment.spec.replicas }}</td>
-                        <td>
-                            <form action="/scale" method="post" class="d-flex flex-column flex-md-row">
-                                <input type="hidden" name="namespace" value="{{ deployment.metadata.namespace }}">
-                                <input type="hidden" name="deployment_name" value="{{ deployment.metadata.name }}">
-                                <input type="number" name="replicas" value="{{ deployment.spec.replicas }}" min="0"
-                                    class="form-control me-2">
-                                <button type="submit" class="btn btn-primary">Scale</button>
-                            </form>
-                        </td>
-                        <td>
-                            <form action="/logs" method="post">
-                                <input type="hidden" name="namespace" value="{{ deployment.metadata.namespace }}">
-                                <select name="pod_name" class="form-select me-2">
-                                    {% for pod in deployment_pods[deployment.metadata.name].items %}
-                                    <option value="{{ pod.metadata.name }}">{{ pod.metadata.name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <button type="submit" class="btn btn-secondary">View Logs</button>
-                            </form>
-                        </td>
-                        <td>
-                            <form action="/restart" method="post" onsubmit="return confirmRestart();">
-                                <input type="hidden" name="namespace" value="{{ deployment.metadata.namespace }}">
-                                <input type="hidden" name="deployment_name" value="{{ deployment.metadata.name }}">
-                                <button type="submit" class="btn btn-warning">Restart</button>
-                            </form>
-                        </td>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Namespace</th>
+                            <th>Current&nbsp;Replicas</th>
+                            <th>Scale</th>
+                            <th>Pod&nbsp;Logs</th>
+                            <th>Rollout&nbsp;Restart</th>
                         </tr>
-                        {% endfor %}
-                </tbody>
+                    </thead>
+                    <tbody>
+                        {% for deployment in deployments.items %}
+                        <tr{% if deployment.metadata.namespace in ['default','kube-system'] %} style="display:none;" {%
+                            endif %}>
+                            <td>{{ deployment.metadata.name }}</td>
+                            <td>{{ deployment.metadata.namespace }}</td>
+                            <td>{{ deployment.spec.replicas }}</td>
+                            <td>
+                                <form action="/scale" method="post" class="d-flex flex-column flex-md-row">
+                                    <input type="hidden" name="namespace" value="{{ deployment.metadata.namespace }}">
+                                    <input type="hidden" name="deployment_name" value="{{ deployment.metadata.name }}">
+                                    <input type="number" name="replicas" value="{{ deployment.spec.replicas }}" min="0"                                        class="form-control me-2">
+                                    <button type="submit" class="btn btn-primary action-button">Scale</button>
+                                </form>
+                            </td>
+                            <td>
+                                <form action="/logs" method="post" class="d-flex align-items-center">
+                                    <input type="hidden" name="namespace" value="{{ deployment.metadata.namespace }}">
+                                    <select name="pod_name" class="form-select me-2">
+                                        {% for pod in deployment_pods[deployment.metadata.name].items %}
+                                        <option value="{{ pod.metadata.name }}">{{ pod.metadata.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-secondary action-button">Logs</button>
+                                </form>
+                                </form>
+                            </td>
+                            <td>
+                                <form action="/restart" method="post" onsubmit="return confirmRestart();">
+                                    <input type="hidden" name="namespace" value="{{ deployment.metadata.namespace }}">
+                                    <input type="hidden" name="deployment_name" value="{{ deployment.metadata.name }}">
+                                    <button type="submit" class="btn btn-warning action-button">Restart</button>
+                                </form>
+                            </td>
+                            </tr>
+                            {% endfor %}
+                    </tbody>
                 </table>
                 <div class="text-center mb-3">
                     <form action="/delete-error-completed-pods" method="post">
