@@ -25,12 +25,12 @@ def index():
             node_name = node_metric['metadata']['name']
             cpu_usage_raw = node_metric['usage']['cpu']
             memory_usage_raw = node_metric['usage']['memory']
-            memory_capacity = node_metric['memory_capacity']
+            memory_allocatable = node_metric['memory_allocatable']
 
             cpu_usage = float(cpu_usage_raw.strip('n')) / 1e6  # Convert nanocores to millicores
             memory_usage = float(memory_usage_raw.strip('Ki')) * 1024  # Convert kibibytes to bytes
 
-            memory_usage_percentage = (memory_usage / memory_capacity) * 100
+            memory_usage_percentage = (memory_usage / memory_allocatable) * 100
 
             node_metrics_human_readable.append({
                 'name': node_name,
@@ -157,17 +157,15 @@ def get_node_metrics():
         for node_metric in node_metrics['items']:
             node_name = node_metric['metadata']['name']
             node = core_v1_api.read_node(node_name)
-            node_memory_capacity_raw = node.status.capacity['memory']
+            node_memory_allocatable_raw = node.status.allocatable['memory']
 
-            node_memory_capacity = float(node_memory_capacity_raw.strip('Ki')) * 1024  # Convert kibibytes to bytes
-            node_metric['memory_capacity'] = node_memory_capacity
+            node_memory_allocatable = float(node_memory_allocatable_raw.strip('Ki')) * 1024  # Convert kibibytes to bytes
+            node_metric['memory_allocatable'] = node_memory_allocatable
 
         return node_metrics
     except ApiException as e:
         print(f"Exception when calling CustomObjectsApi->list_cluster_custom_object: {e}")
         return None
-
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)
