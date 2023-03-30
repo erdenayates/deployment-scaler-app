@@ -92,7 +92,7 @@
                         </thead>
                         <tbody>
                             {% for node_metric in node_metrics %}
-                            <tr>
+                            <tr class="node-metric-row">
                                 <td>{{ node_metric.name }}</td>
                                 <td>{{ node_metric.cpu_usage }}</td>
                                 <td>{{ node_metric.cpu_usage | int / 10 }}%</td>
@@ -118,17 +118,29 @@
             function showHideNamespaces() {
                 let showAll = document.getElementById('showAllNamespaces').checked;
                 let rows = document.querySelectorAll('table tbody tr');
+                let nodeMetricRows = document.querySelectorAll('table tbody tr.node-metric-row');
                 let visibleRowIndex = 0;
-                rows.forEach(row => {
-                    let namespace = row.cells[1].innerText;
-                    let shouldHide = !showAll && (namespace === 'default' || namespace === 'kube-system');
+
+                function updateRowColors(row, shouldHide) {
                     row.style.display = shouldHide ? 'none' : '';
 
                     // Apply alternating background colors to visible rows
                     if (!shouldHide) {
-                        row.style.backgroundColor = visibleRowIndex % 2 === 0 ? '#e9ecef' : '#f8f9fa'; // Swap the colors here
+                        row.style.backgroundColor = visibleRowIndex % 2 === 0 ? '#e9ecef' : '#f8f9fa';
                         visibleRowIndex += 1;
                     }
+                }
+
+                rows.forEach(row => {
+                    let namespace = row.cells[1]?.innerText;
+                    let shouldHide = !showAll && (namespace === 'default' || namespace === 'kube-system');
+                    updateRowColors(row, shouldHide);
+                });
+
+                visibleRowIndex = 0;
+                nodeMetricRows.forEach(row => {
+                    let shouldHide = false;
+                    updateRowColors(row, shouldHide);
                 });
             }
             showHideNamespaces();
