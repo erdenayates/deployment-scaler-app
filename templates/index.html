@@ -49,7 +49,8 @@
                                 <form action="/scale" method="post" class="d-flex flex-column flex-md-row">
                                     <input type="hidden" name="namespace" value="{{ deployment.metadata.namespace }}">
                                     <input type="hidden" name="deployment_name" value="{{ deployment.metadata.name }}">
-                                    <input type="number" name="replicas" value="{{ deployment.spec.replicas }}" min="0"                                        class="form-control me-2">
+                                    <input type="number" name="replicas" value="{{ deployment.spec.replicas }}" min="0"
+                                        class="form-control me-2">
                                     <button type="submit" class="btn btn-primary action-button">Scale</button>
                                 </form>
                             </td>
@@ -103,6 +104,9 @@
                 });
             }
             showHideNamespaces();
+            function confirmRestart() {
+                return confirm('Are you sure you want to restart this deployment?');
+            }
         </script>
 </body>
 
