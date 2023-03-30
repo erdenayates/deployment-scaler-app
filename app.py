@@ -25,14 +25,18 @@ def index():
             node_name = node_metric['metadata']['name']
             cpu_usage_raw = node_metric['usage']['cpu']
             memory_usage_raw = node_metric['usage']['memory']
+            memory_capacity = node_metric['memory_capacity']
 
             cpu_usage = float(cpu_usage_raw.strip('n')) / 1e6  # Convert nanocores to millicores
             memory_usage = float(memory_usage_raw.strip('Ki')) * 1024  # Convert kibibytes to bytes
 
+            memory_usage_percentage = (memory_usage / memory_capacity) * 100
+
             node_metrics_human_readable.append({
                 'name': node_name,
                 'cpu_usage': round(cpu_usage, 2),
-                'memory_usage': int(memory_usage)
+                'memory_usage': int(memory_usage),
+                'memory_usage_percentage': round(memory_usage_percentage, 2)
             })
 
     return render_template("index.html", deployments=deployments, deployment_pods=deployment_pods, node_metrics=node_metrics_human_readable)
@@ -148,10 +152,21 @@ def get_node_metrics():
 
     try:
         node_metrics = api_instance.list_cluster_custom_object(group, version, plural)
+        core_v1_api = client.CoreV1Api()
+
+        for node_metric in node_metrics['items']:
+            node_name = node_metric['metadata']['name']
+            node = core_v1_api.read_node(node_name)
+            node_memory_capacity_raw = node.status.capacity['memory']
+
+            node_memory_capacity = float(node_memory_capacity_raw.strip('Ki')) * 1024  # Convert kibibytes to bytes
+            node_metric['memory_capacity'] = node_memory_capacity
+
         return node_metrics
     except ApiException as e:
         print(f"Exception when calling CustomObjectsApi->list_cluster_custom_object: {e}")
         return None
+
 
 
 if __name__ == "__main__":
