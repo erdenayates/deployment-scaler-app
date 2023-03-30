@@ -16,7 +16,26 @@ def index():
         namespace = deployment.metadata.namespace
         deployment_name = deployment.metadata.name
         deployment_pods[deployment_name] = get_pods_by_deployment(namespace, deployment_name)
-    return render_template("index.html", deployments=deployments, deployment_pods=deployment_pods)
+
+    node_metrics = get_node_metrics()
+    node_metrics_human_readable = []
+
+    if node_metrics:
+        for node_metric in node_metrics['items']:
+            node_name = node_metric['metadata']['name']
+            cpu_usage_raw = node_metric['usage']['cpu']
+            memory_usage_raw = node_metric['usage']['memory']
+
+            cpu_usage = float(cpu_usage_raw.strip('n')) / 1e6  # Convert nanocores to millicores
+            memory_usage = float(memory_usage_raw.strip('Ki')) * 1024  # Convert kibibytes to bytes
+
+            node_metrics_human_readable.append({
+                'name': node_name,
+                'cpu_usage': round(cpu_usage, 2),
+                'memory_usage': int(memory_usage)
+            })
+
+    return render_template("index.html", deployments=deployments, deployment_pods=deployment_pods, node_metrics=node_metrics_human_readable)
 
 
 @app.route("/scale", methods=["POST"])
@@ -121,6 +140,18 @@ def get_pods_by_deployment(namespace, deployment_name):
     pods = api_instance.list_namespaced_pod(namespace, label_selector=label_selector)
     return pods
 
+def get_node_metrics():
+    api_instance = client.CustomObjectsApi()
+    group = 'metrics.k8s.io'
+    version = 'v1beta1'
+    plural = 'nodes'
+
+    try:
+        node_metrics = api_instance.list_cluster_custom_object(group, version, plural)
+        return node_metrics
+    except ApiException as e:
+        print(f"Exception when calling CustomObjectsApi->list_cluster_custom_object: {e}")
+        return None
 
 
 if __name__ == "__main__":

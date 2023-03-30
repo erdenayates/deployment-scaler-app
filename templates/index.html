@@ -83,6 +83,32 @@
                     </form>
                 </div>
             </div>
+            <div class="table-responsive">
+                <h2>Node Metrics</h2>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Node</th>
+                            <th>CPU (cores)</th>
+                            <th>CPU Usage (%)</th>
+                            <th>Memory (bytes)</th>
+                            <th>Memory Usage (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for node_metric in node_metrics %}
+                        <tr>
+                            <td>{{ node_metric.name }}</td>
+                            <td>{{ node_metric.cpu_usage }}</td>
+                            <td>{{ node_metric.cpu_usage | float / 10 | round(2) }}</td>
+                            <td>{{ node_metric.memory_usage }}</td>
+                            <td>{{ node_metric.memory_usage | float / (10 * 1024 * 1024) | round(2) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
         </main>
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
