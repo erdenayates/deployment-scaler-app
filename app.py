@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, jsonify
 from kubernetes import client, config
 from datetime import datetime
 
@@ -18,9 +18,9 @@ def index():
         deployment_pods[deployment_name] = get_pods_by_deployment(namespace, deployment_name)
 
     node_metrics = get_node_metrics()
-    node_metrics_human_readable = []
+    node_metrics_human_readable = process_node_metrics(node_metrics)
 
-
+    
     if node_metrics:
         for node_metric in node_metrics['items']:
             node_name = node_metric['metadata']['name']
@@ -82,6 +82,12 @@ def rollout_restart_deployment():
     rollout_restart(namespace, deployment_name)
     
     return redirect("/")
+
+@app.route("/node_metrics")
+def node_metrics():
+    node_metrics = get_node_metrics()
+    node_metrics_human_readable = process_node_metrics(node_metrics)
+    return jsonify(node_metrics_human_readable)
 
 def rollout_restart(namespace, deployment_name):
     api_instance = client.AppsV1Api()
@@ -167,6 +173,33 @@ def get_node_metrics():
     except ApiException as e:
         print(f"Exception when calling CustomObjectsApi->list_cluster_custom_object: {e}")
         return None
+
+def process_node_metrics(node_metrics):
+    node_metrics_human_readable = []
+
+    if node_metrics:
+        for node_metric in node_metrics['items']:
+            node_name = node_metric['metadata']['name']
+            cpu_usage_raw = node_metric['usage']['cpu']
+            memory_usage_raw = node_metric['usage']['memory']
+            memory_allocatable = node_metric['memory_allocatable']
+
+            cpu_usage = float(cpu_usage_raw.strip('n')) / 1e6  # Convert nanocores to millicores
+            cpu_usage_percentage = (cpu_usage / 1000) * 100  # Calculate the CPU usage percentage
+            memory_usage = float(memory_usage_raw.strip('Ki')) * 1024  # Convert kibibytes to bytes
+            memory_usage_mebibytes = memory_usage / (1024 * 1024)
+
+            memory_usage_percentage = (memory_usage / memory_allocatable) * 100
+
+            node_metrics_human_readable.append({
+                'name': node_name,
+                'cpu_usage': f"{round(cpu_usage)}m",  # Format CPU usage as millicores with 'm' suffix
+                'cpu_usage_percentage': f"{round(cpu_usage_percentage)}%",  # Format CPU usage percentage with '%' suffix
+                'memory_usage': f"{round(memory_usage_mebibytes)}Mi",  # Format memory usage as mebibytes with 'Mi' suffix
+                'memory_usage_percentage': f"{round(memory_usage_percentage, 2)}%"  # Format memory usage percentage with '%' suffix
+            })
+
+    return node_metrics_human_readable
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)

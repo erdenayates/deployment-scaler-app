@@ -90,6 +90,7 @@
                             </tr>
                         </thead>
                         <tbody>
+                        <tbody id="node-metrics-table-body">
                             {% for node_metric in node_metrics %}
                             <tr class="node-metric-row">
                                 <td>{{ node_metric.name }}</td>
@@ -142,10 +143,49 @@
                     updateRowColors(row, shouldHide);
                 });
             }
+
             showHideNamespaces();
             function confirmRestart() {
                 return confirm('Are you sure you want to restart this deployment?');
             }
+
+            function fetchNodeMetrics() {
+                fetch('/node_metrics')
+                    .then(response => response.json())
+                    .then(data => {
+                        const nodeMetricsTableBody = document.getElementById('node-metrics-table-body');
+                        nodeMetricsTableBody.innerHTML = '';
+
+                        data.forEach(node => {
+                            const row = document.createElement('tr');
+
+                            const nameCell = document.createElement('td');
+                            nameCell.innerText = node.name;
+                            row.appendChild(nameCell);
+
+                            const cpuUsageCell = document.createElement('td');
+                            cpuUsageCell.innerText = node.cpu_usage;
+                            row.appendChild(cpuUsageCell);
+
+                            const cpuUsagePercentageCell = document.createElement('td');
+                            cpuUsagePercentageCell.innerText = node.cpu_usage_percentage;
+                            row.appendChild(cpuUsagePercentageCell);
+
+                            const memoryUsageCell = document.createElement('td');
+                            memoryUsageCell.innerText = node.memory_usage;
+                            row.appendChild(memoryUsageCell);
+
+                            const memoryUsagePercentageCell = document.createElement('td');
+                            memoryUsagePercentageCell.innerText = node.memory_usage_percentage;
+                            row.appendChild(memoryUsagePercentageCell);
+
+                            nodeMetricsTableBody.appendChild(row);
+                        });
+                    });
+            }
+
+            fetchNodeMetrics();
+            setInterval(fetchNodeMetrics, 3000);
         </script>
 </body>
 
