@@ -1,8 +1,16 @@
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, url_for
 from kubernetes import client, config
 from functools import lru_cache
 from datetime import datetime
 import urllib3
+import re
+import requests
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+from threading import Lock
+from kubernetes.client.exceptions import ApiException
+
+urllib3.disable_warnings()
 
 # Configure Kubernetes API client
 config.load_incluster_config()
@@ -14,6 +22,7 @@ app = Flask(__name__, static_folder="static")
 # Connection pooling for Kubernetes API client
 api_client.rest_client.pool_manager = urllib3.PoolManager(num_pools=10, maxsize=10, retries=False, timeout=urllib3.Timeout(connect=1, read=2))
 
+error_check_enabled = True
 
 @app.route("/")
 def index():
@@ -22,7 +31,7 @@ def index():
     node_metrics = get_node_metrics()
     node_metrics_human_readable = process_node_metrics(node_metrics)
 
-    return render_template("index.html", deployments=deployments,
+    return render_template("index.html", error_check_enabled=error_check_enabled, deployments=deployments,
                            deployment_pods=deployment_pods,
                            node_metrics=node_metrics_human_readable)
 
@@ -149,10 +158,17 @@ def logs():
     return render_template("logs.html", logs=logs)
 
 @lru_cache(maxsize=None)
-def get_pod_logs(namespace, pod_name):
+def get_pod_logs(namespace, pod_name, container_name=None):
     api_instance = client.CoreV1Api()
-    logs = api_instance.read_namespaced_pod_log(pod_name, namespace)
-    return logs
+    try:
+        if container_name:
+            logs = api_instance.read_namespaced_pod_log(pod_name, namespace, container=container_name)
+        else:
+            logs = api_instance.read_namespaced_pod_log(pod_name, namespace)
+        return logs
+    except ApiException as e:
+        print(f"Exception when calling CoreV1Api->read_namespaced_pod_log: {e}")
+        return None
 
 
 @app.route("/delete-error-completed-pods", methods=["POST"])
@@ -213,6 +229,71 @@ def node_metrics():
     node_metrics_human_readable = process_node_metrics(node_metrics)
     return jsonify(node_metrics_human_readable)
 
+
+def send_notification(message, webhook_url):
+    payload = {
+        "text": message
+    }
+    try:
+        requests.post(webhook_url, json=payload)
+    except requests.exceptions.RequestException as e:
+        print(f"Error sending notification: {e}")
+
+def check_probe_statuses(webhook_url):
+    if not webhook_url:
+        return
+
+    api_instance = client.CoreV1Api()
+    pods = api_instance.list_pod_for_all_namespaces()
+    for pod in pods.items:
+        for container_status in pod.status.container_statuses:
+            if container_status.state.waiting and container_status.state.waiting.reason != "ContainerCreating":
+                message = f"{container_status.state.waiting.reason}: {container_status.state.waiting.message}\nPod: {pod.metadata.name}, Namespace: {pod.metadata.namespace}, Container: {container_status.name}"
+                send_notification(message, webhook_url)
+
+def monitor_pod_logs(webhook_url):
+    if not webhook_url:
+        return
+
+    api_instance = client.CoreV1Api()
+    pods = api_instance.list_pod_for_all_namespaces()
+    
+    for pod in pods.items:
+        namespace = pod.metadata.namespace
+        pod_name = pod.metadata.name
+        logs = get_pod_logs(namespace, pod_name)
+        
+        if logs and "error" in logs.lower():
+            message = f"Error detected in pod logs for pod {pod_name} in namespace {namespace}"
+            send_notification(message, webhook_url)
+
+
+monitor_logs_lock = Lock()
+
+# Set your webhook URL
+SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"
+
+scheduler = BackgroundScheduler()
+scheduler.start()
+
+scheduler.add_job(
+    func=monitor_pod_logs,
+    trigger=IntervalTrigger(minutes=1),
+    args=[SLACK_WEBHOOK_URL],  # or use TEAMS_WEBHOOK_URL for Microsoft Teams
+    replace_existing=True
+)
+
+@app.route('/stop-error-check', methods=['POST'])
+def stop_error_check():
+    # Add your code to stop the error-readiness/probness check feature
+    return redirect(url_for('index'))
+
+@app.route('/toggle-error-check', methods=['POST'])
+def toggle_error_check():
+    global error_check_enabled
+    error_check_enabled = not error_check_enabled
+    # Add your code to enable/disable the error-readiness/probness check feature accordingly
+    return redirect(url_for('index'))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)

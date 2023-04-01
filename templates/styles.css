@@ -76,6 +76,34 @@ button:hover {
     color: white;
 }
 
+.dark-mode {
+    background-color: #343a40;
+    color: white;
+}
+
+.dark-mode table {
+    background-color: #454d55;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode th {
+    background-color: #007bff;
+    color: white;
+    padding: 0.75rem;
+    text-align: left;
+}
+
+.dark-mode td {
+    padding: 0.75rem;
+    text-align: left;
+    border: 1px solid #6c757d;
+}
+
+.dark-mode tr {
+    background-color: #454d55;
+}
+
+
 .node-metrics-title {
     font-size: 1.75rem;
     font-weight: 600;
