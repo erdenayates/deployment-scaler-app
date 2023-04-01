@@ -28,8 +28,8 @@ def index():
 
 @lru_cache(maxsize=None)
 def get_deployments():
-    with client.AppsV1Api(api_client) as api_instance:
-        deployments = api_instance.list_deployment_for_all_namespaces()
+    api_instance = client.AppsV1Api()
+    deployments = api_instance.list_deployment_for_all_namespaces()
     return deployments
 
 
@@ -43,39 +43,41 @@ def get_deployment_pods(deployments):
 
 @lru_cache(maxsize=None)
 def get_pods_by_deployment(namespace, deployment_name):
-    with client.CoreV1Api(api_client) as api_instance:
-        # Get deployment to find the correct label selector
-        apps_v1_api = client.AppsV1Api(api_client)
-        deployment = apps_v1_api.read_namespaced_deployment(namespace=namespace, name=deployment_name)
+    api_instance = client.CoreV1Api()
 
-        # Use the deployment's label selector to find its pods
-        label_selector = ','.join([f"{k}={v}" for k, v in deployment.spec.selector.match_labels.items()])
-        pods = api_instance.list_namespaced_pod(namespace, label_selector=label_selector)
+    # Get deployment to find the correct label selector
+    apps_v1_api = client.AppsV1Api()
+    deployment = apps_v1_api.read_namespaced_deployment(namespace=namespace, name=deployment_name)
+
+    # Use the deployment's label selector to find its pods
+    label_selector = ','.join([f"{k}={v}" for k, v in deployment.spec.selector.match_labels.items()])
+    pods = api_instance.list_namespaced_pod(namespace, label_selector=label_selector)
     return pods
 
 @lru_cache(maxsize=None)
 def get_node_metrics():
-    with client.CustomObjectsApi(api_client) as api_instance:
-        group = 'metrics.k8s.io'
-        version = 'v1beta1'
-        plural = 'nodes'
+    api_instance = client.CustomObjectsApi()
+    group = 'metrics.k8s.io'
+    version = 'v1beta1'
+    plural = 'nodes'
 
-        try:
-            node_metrics = api_instance.list_cluster_custom_object(group, version, plural)
-            core_v1_api = client.CoreV1Api(api_client)
+    try:
+        node_metrics = api_instance.list_cluster_custom_object(group, version, plural)
+        core_v1_api = client.CoreV1Api()
 
-            for node_metric in node_metrics['items']:
-                node_name = node_metric['metadata']['name']
-                node = core_v1_api.read_node(node_name)
-                node_memory_allocatable_raw = node.status.allocatable['memory']
+        for node_metric in node_metrics['items']:
+            node_name = node_metric['metadata']['name']
+            node = core_v1_api.read_node(node_name)
+            node_memory_allocatable_raw = node.status.allocatable['memory']
 
-                node_memory_allocatable = float(node_memory_allocatable_raw.strip('Ki')) * 1024  # Convert kibibytes to bytes
-                node_metric['memory_allocatable'] = node_memory_allocatable
+            node_memory_allocatable = float(node_memory_allocatable_raw.strip('Ki')) * 1024  # Convert kibibytes to bytes
+            node_metric['memory_allocatable'] = node_memory_allocatable
 
-            return node_metrics
-        except client.ApiException as e:
-            print(f"Exception when calling CustomObjectsApi->list_cluster_custom_object: {e}")
-            return None
+        return node_metrics
+    except ApiException as e:
+        print(f"Exception when calling CustomObjectsApi->list_cluster_custom_object: {e}")
+        return None
+
 
 def process_node_metrics(node_metrics):
     node_metrics_human_readable = []
@@ -87,7 +89,7 @@ def process_node_metrics(node_metrics):
             memory_usage_raw = node_metric['usage']['memory']
             memory_allocatable = node_metric['memory_allocatable']
 
-            cpu_usage = float(cpu_usage_raw.strip('n')) / 1e6 # Convert nanocores to millicores
+            cpu_usage = float(cpu_usage_raw.strip('n')) / 1e6  # Convert nanocores to millicores
             cpu_usage_percentage = (cpu_usage / 1000) * 100  # Calculate the CPU usage percentage
             memory_usage = float(memory_usage_raw.strip('Ki')) * 1024  # Convert kibibytes to bytes
             memory_usage_mebibytes = memory_usage / (1024 * 1024)
@@ -122,19 +124,20 @@ def scale():
 
 @lru_cache(maxsize=None)
 def scale_deployment(namespace, deployment_name, replicas):
-    with client.AppsV1Api(api_client) as api_instance:
-        # Update the deployment with the new replica count
-        update_deployment = {
-            'spec': {
-                'replicas': replicas
-            }
-        }
+    api_instance = client.AppsV1Api()
 
-        try:
-            api_response = api_instance.patch_namespaced_deployment(deployment_name, namespace, update_deployment)
-            print(f"Deployment {deployment_name} in namespace {namespace} has been scaled to {replicas} replicas.")
-        except client.ApiException as e:
-            print(f"Exception when calling AppsV1Api->patch_namespaced_deployment: {e}")
+    # Update the deployment with the new replica count
+    update_deployment = {
+        'spec': {
+            'replicas': replicas
+        }
+    }
+
+    try:
+        api_response = api_instance.patch_namespaced_deployment(deployment_name, namespace, update_deployment)
+        print(f"Deployment {deployment_name} in namespace {namespace} has been scaled to {replicas} replicas.")
+    except client.ApiException as e:
+        print(f"Exception when calling AppsV1Api->patch_namespaced_deployment: {e}")
 
 
 @app.route("/logs", methods=["POST"])
@@ -147,9 +150,10 @@ def logs():
 
 @lru_cache(maxsize=None)
 def get_pod_logs(namespace, pod_name):
-    with client.CoreV1Api(api_client) as api_instance:
-        logs = api_instance.read_namespaced_pod_log(pod_name, namespace)
+    api_instance = client.CoreV1Api()
+    logs = api_instance.read_namespaced_pod_log(pod_name, namespace)
     return logs
+
 
 @app.route("/delete-error-completed-pods", methods=["POST"])
 def delete_error_completed_pods():
@@ -164,13 +168,15 @@ def delete_error_completed_pods():
 
 @lru_cache(maxsize=None)
 def delete_error_and_completed_pods():
-    with client.CoreV1Api(api_client) as api_instance:
-        pods = api_instance.list_pod_for_all_namespaces()
+    api_instance = client.CoreV1Api()
+    pods = api_instance.list_pod_for_all_namespaces()
 
-        for pod in pods.items:
-            if pod.status.phase in ['Error', 'Succeeded', 'Failed']:
-                api_instance.delete_namespaced_pod(pod.metadata.name, pod.metadata.namespace)
+    for pod in pods.items:
+        if pod.status.phase in ['Error', 'Succeeded', 'Failed']:
+            api_instance.delete_namespaced_pod(pod.metadata.name, pod.metadata.namespace)
 
+
+@app.route("/restart", methods=["POST"])
 def rollout_restart_deployment():
     namespace = request.form["namespace"]
     deployment_name = request.form["deployment_name"]
@@ -186,19 +192,19 @@ def rollout_restart_deployment():
 
 @lru_cache(maxsize=None)
 def rollout_restart(namespace, deployment_name):
-    with client.AppsV1Api(api_client) as api_instance:
-        body = {
-            "spec": {
-                "template": {
-                    "metadata": {
-                        "annotations": {
-                            "kubectl.kubernetes.io/restartedAt": datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
-                        }
+    api_instance = client.AppsV1Api()
+    body = {
+        "spec": {
+            "template": {
+                "metadata": {
+                    "annotations": {
+                        "kubectl.kubernetes.io/restartedAt": datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
                     }
                 }
             }
         }
-        api_instance.patch_namespaced_deployment(deployment_name, namespace, body)
+    }
+    api_instance.patch_namespaced_deployment(deployment_name, namespace, body)
 
 
 @app.route("/node_metrics")
@@ -210,4 +216,3 @@ def node_metrics():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)
-
