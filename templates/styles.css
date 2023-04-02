@@ -15,19 +15,6 @@ main {
     margin: 0 auto;
 }
 
-.deployment-name,
-.namespace,
-.current-replicas,
-.node_metric,
-.node_metric.name,
-.node_metric.cpu_usage
-.node_metric.memory_usage
-.deployment.metadata.name
-.deployment.metadata.namespace
-.deployment.spec.replicas {
-    color: #ffffff;
-}
-
 .app-title {
     margin-bottom: 1rem;
     font-size: 2rem;
@@ -72,11 +59,6 @@ table tbody tr:nth-child(odd) td {
     color: #ffffff;
 }
 
-:root {
-    --bs-table-striped-color: #ffffff;
-}
-
-
 th {
     background-color: #007bff;
     color: white;
@@ -104,32 +86,6 @@ button {
 button:hover {
     background-color: #0056b3;
     color: white;
-}
-
-.dark-mode {
-    background-color: #343a40;
-}
-
-.dark-mode table {
-    background-color: #454d55;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.dark-mode th {
-    background-color: #007bff;
-    color: white;
-    padding: 0.75rem;
-    text-align: left;
-}
-
-.dark-mode td {
-    padding: 0.75rem;
-    text-align: left;
-    border: 1px solid #6c757d;
-}
-
-.dark-mode tr {
-    background-color: #454d55;
 }
 
 

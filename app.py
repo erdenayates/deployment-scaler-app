@@ -79,9 +79,12 @@ def get_node_metrics():
             node = core_v1_api.read_node(node_name)
             node_memory_allocatable_raw = node.status.allocatable['memory']
 
-            # Handle 'M' suffix for mebibytes
             if node_memory_allocatable_raw.endswith('M'):
                 node_memory_allocatable = float(node_memory_allocatable_raw.strip('M')) * 1024 * 1024  # Convert mebibytes to bytes
+            elif node_memory_allocatable_raw.endswith('G'):
+                node_memory_allocatable = float(node_memory_allocatable_raw.strip('G')) * 1024 * 1024 * 1024  # Convert gibibytes to bytes
+            elif node_memory_allocatable_raw.endswith('T'):
+                node_memory_allocatable = float(node_memory_allocatable_raw.strip('T')) * 1024 * 1024 * 1024 * 1024  # Convert tebibytes to bytes
             else:
                 node_memory_allocatable = float(node_memory_allocatable_raw.strip('Ki')) * 1024  # Convert kibibytes to bytes
             
