@@ -79,10 +79,16 @@ def get_node_metrics():
             node = core_v1_api.read_node(node_name)
             node_memory_allocatable_raw = node.status.allocatable['memory']
 
-            node_memory_allocatable = float(node_memory_allocatable_raw.strip('Ki')) * 1024  # Convert kibibytes to bytes
+            # Handle 'M' suffix for mebibytes
+            if node_memory_allocatable_raw.endswith('M'):
+                node_memory_allocatable = float(node_memory_allocatable_raw.strip('M')) * 1024 * 1024  # Convert mebibytes to bytes
+            else:
+                node_memory_allocatable = float(node_memory_allocatable_raw.strip('Ki')) * 1024  # Convert kibibytes to bytes
+            
             node_metric['memory_allocatable'] = node_memory_allocatable
 
         return node_metrics
+
     except ApiException as e:
         print(f"Exception when calling CustomObjectsApi->list_cluster_custom_object: {e}")
         return None

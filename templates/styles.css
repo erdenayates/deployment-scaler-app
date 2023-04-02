@@ -1,7 +1,7 @@
 body {
     padding: 2rem;
-    background-color: #f8f9fa;
-    color: #343a40;
+    background-color: #444b52;
+    color: #ffffff;
     font-family: Arial, sans-serif;
     line-height: 1.6;
 }
@@ -13,6 +13,19 @@ main {
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     max-width: 1200px;
     margin: 0 auto;
+}
+
+.deployment-name,
+.namespace,
+.current-replicas,
+.node_metric,
+.node_metric.name,
+.node_metric.cpu_usage
+.node_metric.memory_usage
+.deployment.metadata.name
+.deployment.metadata.namespace
+.deployment.spec.replicas {
+    color: #ffffff;
 }
 
 .app-title {
@@ -48,12 +61,29 @@ table {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+table tbody td {
+    padding: 0.75rem;
+    text-align: left;
+    border: 1px solid #dee2e6;
+    color: #ffffff;
+}
+
+table tbody tr:nth-child(odd) td {
+    color: #ffffff;
+}
+
+:root {
+    --bs-table-striped-color: #ffffff;
+}
+
+
 th {
     background-color: #007bff;
     color: white;
     padding: 0.75rem;
     text-align: left;
 }
+
 
 td {
     padding: 0.75rem;
@@ -78,7 +108,6 @@ button:hover {
 
 .dark-mode {
     background-color: #343a40;
-    color: white;
 }
 
 .dark-mode table {
