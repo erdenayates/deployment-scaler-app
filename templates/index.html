@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>kubebolt</title>
+    <link rel="stylesheet" type="text/css" href="./styles.css" />
     <link rel="icon" href="https://s3.amazonaws.com/erdenayat.es/kubebolt.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -12,6 +13,11 @@
             background-color: #323938;
             color: #ffffff;
             /* Light text color */
+        }
+
+        #grad1 {
+            background-color: rgb(50, 57, 56);
+            background-image: linear-gradient(90deg, rgba(50, 57, 56, 1) 0%, rgba(34, 38, 38, 1) 64%, rgba(0, 0, 0, 1) 100%);
         }
 
         table {
@@ -67,6 +73,18 @@
         table tbody tr.table-row-odd {
             background-color: #444b52;
         }
+
+        .btn-custom {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: #ffffff;
+        }
+
+        .btn-custom:hover {
+            background-color: #0c62e2;
+            border-color: #0c62e2;
+            color: #ffffff;
+        }
     </style>
 </head>
 
@@ -108,7 +126,7 @@
                                             value="{{ deployment.metadata.name }}">
                                         <input type="number" name="replicas" value="{{ deployment.spec.replicas }}"
                                             min="0" class="form-control me-2">
-                                        <button type="submit" class="btn btn-primary action-button">Scale</button>
+                                        <button type="submit" class="btn btn-custom action-button">Scale</button>
                                     </form>
                                 </td>
                                 <td>
@@ -120,7 +138,7 @@
                                             <option value="{{ pod.metadata.name }}">{{ pod.metadata.name }}</option>
                                             {% endfor %}
                                         </select>
-                                        <button type="submit" class="btn btn-secondary action-button">Logs</button>
+                                        <button type="submit" class="btn btn-custom action-button">Logs</button>
                                     </form>
                                     </form>
                                 </td>
@@ -130,7 +148,7 @@
                                             value="{{ deployment.metadata.namespace }}">
                                         <input type="hidden" name="deployment_name"
                                             value="{{ deployment.metadata.name }}">
-                                        <button type="submit" class="btn btn-warning action-button">Restart</button>
+                                        <button type="submit" class="btn btn-custom action-button">Restart</button>
                                     </form>
                                 </td>
                                 </tr>
