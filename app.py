@@ -280,7 +280,7 @@ def monitor_pod_logs(webhook_url):
 monitor_logs_lock = Lock()
 
 # Set your webhook URL
-SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"
+SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"
 
 scheduler = BackgroundScheduler()
 scheduler.start()
