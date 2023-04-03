@@ -185,20 +185,6 @@
                 </table>
             </div>
             <div class="text-center mb-1">
-                <form action="/toggle-error-check" method="post">
-                    {% if error_check_enabled %}
-                    <button type="submit" class="btn btn-danger">Stop Error-Readiness/Probness Check</button>
-                    {% else %}
-                    <button type="submit" class="btn btn-success">Start Error-Readiness/Probness Check</button>
-                    {% endif %}
-                </form>
-                {% if error_check_enabled %}
-                <p class="mt-1">Error-Readiness/Probness Check is currently <strong>enabled</strong>.</p>
-                {% else %}
-                <p class="mt-1">Error-Readiness/Probness Check is currently <strong>disabled</strong>.</p>
-                {% endif %}
-            </div>
-            <div class="text-center mb-1">
                 <form action="/delete-error-completed-pods" method="post">
                     <button type="submit" class="btn btn-danger">Delete Error and Completed Pods</button>
                 </form>
