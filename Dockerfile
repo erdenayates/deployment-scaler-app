@@ -13,7 +13,7 @@ COPY app.py /app/
 COPY templates/ /app/templates/
 
 # Expose port for the application
-EXPOSE 8080
+EXPOSE 80
 
 # Run the application
 CMD ["python", "app.py"]

@@ -151,15 +151,7 @@ def get_node_metrics():
             node = core_v1_api.read_node(node_name)
             node_memory_allocatable_raw = node.status.allocatable['memory']
 
-            if node_memory_allocatable_raw.endswith('M'):
-                node_memory_allocatable = float(node_memory_allocatable_raw.strip('M')) * 1024 * 1024  # Convert mebibytes to bytes
-            elif node_memory_allocatable_raw.endswith('G'):
-                node_memory_allocatable = float(node_memory_allocatable_raw.strip('G')) * 1024 * 1024 * 1024  # Convert gibibytes to bytes
-            elif node_memory_allocatable_raw.endswith('T'):
-                node_memory_allocatable = float(node_memory_allocatable_raw.strip('T')) * 1024 * 1024 * 1024 * 1024  # Convert tebibytes to bytes
-            else:
-                node_memory_allocatable = float(node_memory_allocatable_raw.strip('Ki')) * 1024  # Convert kibibytes to bytes
-            
+            node_memory_allocatable = parse_memory_string(node_memory_allocatable_raw)
             node_metric['memory_allocatable'] = node_memory_allocatable
 
         return node_metrics
@@ -195,6 +187,18 @@ def process_node_metrics(node_metrics):
 
     return node_metrics_human_readable
 
+def parse_memory_string(memory_string):
+    if memory_string.endswith('M'):
+        return float(memory_string.strip('M')) * 1024 * 1024  # Convert mebibytes to bytes
+    elif memory_string.endswith('G'):
+        return float(memory_string.strip('G')) * 1024 * 1024 * 1024  # Convert gibibytes to bytes
+    elif memory_string.endswith('T'):
+        return float(memory_string.strip('T')) * 1024 * 1024 * 1024 * 1024  # Convert tebibytes to bytes
+    elif memory_string.endswith('Ki'):
+        return float(memory_string.strip('Ki')) * 1024  # Convert kibibytes to bytes
+    else:
+        raise ValueError(f"Cannot parse memory string: {memory_string}")
+
 @app.route("/node_metrics")
 def node_metrics():
     node_metrics = get_node_metrics()
@@ -202,4 +206,4 @@ def node_metrics():
     return jsonify(node_metrics_human_readable)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=80, debug=True)

@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kubebolt
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubebolt
+  namespace: kubebolt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubebolt
+  template:
+    metadata:
+      labels:
+        app: kubebolt
+    spec:
+      serviceAccountName: kubebolt-sa
+      containers:
+      - name: kubebolt
+        image: gcr.io/ea-k8s-381622/kubebolt:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: kubeconfig
+          mountPath: "/kubeconfig"
+          readOnly: true
+      volumes:
+      - name: kubeconfig
+        secret:
+          secretName: kubeconfig
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubebolt
+  namespace: kubebolt
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: kubebolt
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubebolt-sa
+  namespace: kubebolt
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubebolt-role
+rules:
+- apiGroups: ["", "apps"]
+  resources: ["deployments", "deployments/scale", "pods", "pods/log"]
+  verbs: ["get", "list", "watch", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["nodes"]
+  verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubebolt-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubebolt-role
+subjects:
+- kind: ServiceAccount
+  name: kubebolt-sa
+  namespace: kubebolt
+
