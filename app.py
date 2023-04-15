@@ -1,14 +1,6 @@
 from flask import Flask, render_template, request, redirect, jsonify, url_for
 from kubernetes import client, config
-from functools import lru_cache
 from datetime import datetime
-import urllib3
-import re
-import requests
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.interval import IntervalTrigger
-from threading import Lock
-from kubernetes.client.exceptions import ApiException
 
 # Configure Kubernetes API client
 config.load_incluster_config()
@@ -206,4 +198,4 @@ def node_metrics():
     return jsonify(node_metrics_human_readable)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80, debug=True)
+    app.run(host="0.0.0.0", port=80, debug=True) 
