@@ -24,14 +24,6 @@ spec:
         image: gcr.io/ea-k8s-381622/kubebolt:latest
         ports:
         - containerPort: 80
-        volumeMounts:
-        - name: kubeconfig
-          mountPath: "/kubeconfig"
-          readOnly: true
-      volumes:
-      - name: kubeconfig
-        secret:
-          secretName: kubeconfig
 
 ---
 
@@ -85,4 +77,3 @@ subjects:
 - kind: ServiceAccount
   name: kubebolt-sa
   namespace: kubebolt
-
